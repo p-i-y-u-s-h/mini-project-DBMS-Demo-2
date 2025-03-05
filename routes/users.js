@@ -51,17 +51,31 @@ router.get("/:id",async(req,res)=>{
     }
 })
 
-router.put("/:id/follow",async (req,res)=>{
-    if(req.body.userId !== req.params.id){
-        try{
+//follow a user
+router.put("/:id/follow", async (req, res) => {
+    if (req.body.userId !== req.params.id) {
+        try {
             const user = await User.findById(req.params.id);
-            const currentUser = await User.findById(req.body.user);
-        }catch(err){
-            res.status(500).json(err);
+            const currentUser = await User.findById(req.body.userId);
+
+            if (!user || !currentUser) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            if (!user.followers.includes(req.body.userId)) {
+                await user.updateOne({ $push: { followers: req.body.userId } });
+                await currentUser.updateOne({ $push: { following: req.params.id } });
+
+                res.status(200).json({ message: "User has been followed" });
+            } else {
+                res.status(403).json({ message: "You already follow this user" });
+            }
+        } catch (err) {
+            res.status(500).json({ message: "Internal server error", error: err.message });
         }
-    }else{
-        res.status(403).json("you cant follow yourself");
+    } else {
+        res.status(403).json({ message: "You can't follow yourself" });
     }
-})
+});
 
 module.exports = router
