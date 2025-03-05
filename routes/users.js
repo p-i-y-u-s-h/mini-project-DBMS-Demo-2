@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { json } = require("express");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 
@@ -39,5 +40,28 @@ router.delete("/:id", async (req, res) => {
         return res.status(403).json({ error: "You can delete only your account" });
     }
 });
+
+router.get("/:id",async(req,res)=>{
+    try{
+        const user = await User.findById(req.params.id);
+        const{password,updatedAt, ...other} = user._doc
+        res.status(200).json(other)
+    }catch(err){
+        res.status(500).json(err)
+    }
+})
+
+router.put("/:id/follow",async (req,res)=>{
+    if(req.body.userId !== req.params.id){
+        try{
+            const user = await User.findById(req.params.id);
+            const currentUser = await User.findById(req.body.user);
+        }catch(err){
+            res.status(500).json(err);
+        }
+    }else{
+        res.status(403).json("you cant follow yourself");
+    }
+})
 
 module.exports = router
